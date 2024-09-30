@@ -12,6 +12,7 @@ import scipy.ndimage as ndi
 from tqdm.auto import trange
 
 from niftypet import nimpa
+from niftypet import timer
 
 # resources contain isotope info
 from .. import mmraux, mmrnorm, resources
@@ -199,7 +200,9 @@ def osemone(datain, mumaps, hst, scanner_params, recmod=3, itr=4, fwhm=0., psf=N
     muh, muo = mumaps
 
     # get the GPU version of the image dims
+    timer.start_block("convert2dev")
     mus = mmrimg.convert2dev(muo + muh, Cnt)
+    timer.end_block("convert2dev")
 
     # remove gaps from the prompt sino
     psng = mmraux.remgaps(hst['psino'], txLUT, Cnt)
@@ -246,8 +249,10 @@ def osemone(datain, mumaps, hst, scanner_params, recmod=3, itr=4, fwhm=0., psf=N
         rsino = randsino
         rsng = mmraux.remgaps(randsino, txLUT, Cnt)
     else:
+        timer.start_block("randoms")
         rsino, snglmap = randoms(hst, scanner_params)
         rsng = mmraux.remgaps(rsino, txLUT, Cnt)
+        timer.end_block("randoms")
     # ========================================================================
 
     # ========================================================================
@@ -257,6 +262,7 @@ def osemone(datain, mumaps, hst, scanner_params, recmod=3, itr=4, fwhm=0., psf=N
         if sctsino is not None:
             ssng = mmraux.remgaps(sctsino, txLUT, Cnt)
         elif sctsino is None and os.path.isfile(datain['em_crr']):
+            timer.start_block("scatter")
             emd = nimpa.getnii(datain['em_crr'])
             ssn = vsm(
                 datain,
@@ -269,6 +275,7 @@ def osemone(datain, mumaps, hst, scanner_params, recmod=3, itr=4, fwhm=0., psf=N
                 emmsk=False,
             )
             ssng = mmraux.remgaps(ssn, txLUT, Cnt)
+            timer.end_block("scatter")
         else:
             raise ValueError("No emission image available for scatter estimation! " +
                              " Check if it's present or the path is correct.")
@@ -277,6 +284,7 @@ def osemone(datain, mumaps, hst, scanner_params, recmod=3, itr=4, fwhm=0., psf=N
     # ========================================================================
 
     log.info('------ OSEM (%d) -------', itr)
+    timer.start_block("recon")
     # ------------------------------------
     Sn = 14   # number of subsets
 
@@ -386,6 +394,7 @@ def osemone(datain, mumaps, hst, scanner_params, recmod=3, itr=4, fwhm=0., psf=N
 
                 nimpa.array2nii(im[::-1, ::-1, :], B, fpet)
 
+    timer.end_block("recon")
     log.info('recon time: %.3g', time.time() - stime)
     # ========================================================================
 

@@ -7,6 +7,7 @@ from textwrap import dedent
 import numpy as np
 
 from niftypet import nimpa
+from niftypet import timer
 
 from ..lm import dynamic_timings
 from ..lm.mmrhist import mmrhist
@@ -293,6 +294,7 @@ def mmrchain(
     ifrmP = 0
     # iterate over frame index
     for ifrm in range(nfrm):
+        timer.start_frame()
         # start time of a current (ifrm-th) dynamic frame
         t0 = int(t_frms[ifrm][0])
         # end time of a current (ifrm-th) dynamic frame
@@ -302,7 +304,9 @@ def mmrchain(
         # --------------
         log.info('dynamic frame times t0={}, t1={}:'.format(t0, t1))
         if histo is None:
+            timer.start_block("histograming")
             hst = mmrhist(datain, scanner_params, t0=t0, t1=t1)
+            timer.end_block("histograming")
         else:
             hst = histo
             log.info(
@@ -371,6 +375,7 @@ def mmrchain(
                 output['fsmoi'].append(recimg.fsmo)
 
         if nfrm == 1: output['tuple'] = recimg
+        timer.end_frame()
 
     output['im'] = np.squeeze(dynim)
 
