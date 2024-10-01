@@ -262,7 +262,6 @@ def osemone(datain, mumaps, hst, scanner_params, recmod=3, itr=4, fwhm=0., psf=N
         if sctsino is not None:
             ssng = mmraux.remgaps(sctsino, txLUT, Cnt)
         elif sctsino is None and os.path.isfile(datain['em_crr']):
-            timer.start_block("scatter")
             emd = nimpa.getnii(datain['em_crr'])
             ssn = vsm(
                 datain,
@@ -275,7 +274,6 @@ def osemone(datain, mumaps, hst, scanner_params, recmod=3, itr=4, fwhm=0., psf=N
                 emmsk=False,
             )
             ssng = mmraux.remgaps(ssn, txLUT, Cnt)
-            timer.end_block("scatter")
         else:
             raise ValueError("No emission image available for scatter estimation! " +
                              " Check if it's present or the path is correct.")
@@ -369,10 +367,11 @@ def osemone(datain, mumaps, hst, scanner_params, recmod=3, itr=4, fwhm=0., psf=N
                 break
             if recmod >= 3 and k < itr - 1 and itr > 1:
                 sct_time = time.time()
+                timer.start_block("scatter")
                 sct = vsm(datain, mumaps, mmrimg.convert2e7(img, Cnt), scanner_params, histo=hst,
                           rsino=rsino, emmsk=emmskS, return_ssrb=return_ssrb,
                           return_mask=return_mask)
-
+                timer.end_block("scatter")
                 if isinstance(sct, dict):
                     ssn = sct['sino']
                 else:
