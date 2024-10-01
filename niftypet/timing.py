@@ -1,13 +1,15 @@
 import time
 import json
 from pathlib import Path
-from typing import List, Dict
-from datetime import timedelta
+from typing import List, Dict, TypeVar
+from datetime import timedelta, datetime
 from copy import deepcopy
 
+T = TypeVar("T")
 
-class ReconTimer:
-    """Utility class to easily time different parts of the reconstruction.
+class ReconMetadata:
+    """Utility class to easily time different parts of the reconstruction,
+    store some metadata and in the end store it to a json logfile.
 
     Usage:
         At the beginning of processing set up a global instance of this class
@@ -18,13 +20,15 @@ class ReconTimer:
 
         In the end call the `end` method and save the processing statistics using `save`.
         This will create a json file in the specified directory called `timings_{id}.json`,
-        where `id` is the identifier passed to the ReconTimer constructor.
+        where `id` is the identifier passed to the ReconMetadata constructor.
     """
 
     def __init__(self, identifier: str = "") -> None:
         self._current_times = dict()
         self._previous_times = []
         self._identifier = identifier
+        self._metadata = dict()
+        self.add_metadatum("identifier", identifier)
 
     def start(self) -> None:
         """Set overall start to current time"""
@@ -80,9 +84,12 @@ class ReconTimer:
         averages = self._calc_averages(durations)
         variances = self._calc_variances(durations, averages)
 
-        with open(outdir / f"timings_{self._identifier}.json", "w") as f:
+        filename = f"{datetime.now().strftime('%Y-%m-%d-%H-%M')}_metadata_{self._identifier}.json"
+
+        with open(outdir / filename, "w") as f:
             json.dump(
                 {
+                    "metadata": self._metadata,
                     "averages": averages,
                     "variances": variances,
                     "total_seconds": self.total_duration.seconds,
@@ -102,3 +109,11 @@ class ReconTimer:
         )
 
         self._current_times = dict()
+
+    def add_metadatum(self, key: str, value: T) -> T:
+        """Add a metadata to save to the logfile.
+
+        :return: Value for easier assignment
+        """
+        self._metadata[key] = str(value)
+        return value
