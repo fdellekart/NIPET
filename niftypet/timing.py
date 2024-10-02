@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import List, Dict, TypeVar
 from datetime import timedelta, datetime
 from copy import deepcopy
+from math import sqrt
 
 T = TypeVar("T")
 
@@ -70,19 +71,21 @@ class ReconMetadata:
         }
 
     @staticmethod
-    def _calc_variances(
+    def _calc_deviations(
         durations: List[Dict[str, float]], averages: Dict[str, float]
     ) -> Dict[str, float]:
         return {
-            key: sum([(el[key] - averages[key]) ** 2 for el in durations])
-            / len(durations)
+            key: sqrt(
+                sum([(el[key] - averages[key]) ** 2 for el in durations])
+                / len(durations)
+            )
             for key in durations[0].keys()
         }
 
     def save(self, outdir: Path):
         durations = self._calc_durations()
         averages = self._calc_averages(durations)
-        variances = self._calc_variances(durations, averages)
+        std_deviations = self._calc_deviations(durations, averages)
 
         filename = f"{datetime.now().strftime('%Y-%m-%d-%H-%M')}_metadata_{self._identifier}.json"
 
@@ -91,7 +94,7 @@ class ReconMetadata:
                 {
                     "metadata": self._metadata,
                     "averages": averages,
-                    "variances": variances,
+                    "std_deviations": std_deviations,
                     "total_seconds": self.total_duration.seconds,
                 },
                 f,
