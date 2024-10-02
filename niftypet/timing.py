@@ -20,8 +20,9 @@ class ReconMetadata:
         Log as many block durations as you want with `start_block` and `end_block`.
 
         In the end call the `end` method and save the processing statistics using `save`.
-        This will create a json file in the specified directory called `timings_{id}.json`,
-        where `id` is the identifier passed to the ReconMetadata constructor.
+        This will create a json file in the specified directory called `%Y-%m-%d-%H-%M_metadata_{id}.json`,
+        where the first part indicates the current date and time and
+        `id` is the identifier passed to the ReconMetadata constructor.
     """
 
     def __init__(self, identifier: str = "") -> None:
