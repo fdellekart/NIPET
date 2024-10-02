@@ -102,6 +102,19 @@ class ReconMetadata:
 
     def end_frame(self) -> None:
         self.end_block("frame")
+        frame_time = (
+            self._current_times["frame"]["end"] - self._current_times["frame"]["start"]
+        )
+        assigned_time = sum(
+            [
+                value["end"] - value["start"]
+                for key, value in self._current_times.items()
+                if key != "frame"
+            ]
+        )
+        self._current_times["unassigned"]["start"] = 0
+        self._current_times["unassigned"]["end"] = frame_time - assigned_time
+
         self._previous_times.append(deepcopy(self._current_times))
         print(
             f"Finished frame nr {len(self._previous_times)}. "
