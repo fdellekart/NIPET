@@ -5,6 +5,7 @@ from typing import List, Dict, TypeVar
 from datetime import timedelta, datetime
 from copy import deepcopy
 from math import sqrt
+from collections import defaultdict
 
 T = TypeVar("T")
 
@@ -26,7 +27,7 @@ class ReconMetadata:
     """
 
     def __init__(self, identifier: str = "") -> None:
-        self._current_times = dict()
+        self._current_times = defaultdict(dict)
         self._previous_times = []
         self._identifier = identifier
         self._metadata = dict()
@@ -42,7 +43,6 @@ class ReconMetadata:
 
     def start_block(self, block_name: str) -> None:
         """Set start time of a task within the reconstruction"""
-        self._current_times[block_name] = self._current_times.get(block_name, dict())
         self._current_times[block_name]["start"] = time.time()
 
     def end_block(self, block_name: str) -> None:
@@ -125,7 +125,7 @@ class ReconMetadata:
             f"Took {self._current_times['frame']['end'] - self._current_times['frame']['start']} seconds."
         )
 
-        self._current_times = dict()
+        self._current_times = defaultdict(dict)
 
     def add_metadatum(self, key: str, value: T) -> T:
         """Add a metadata to save to the logfile.
