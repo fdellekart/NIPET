@@ -88,9 +88,7 @@ class ReconMetadata:
         averages = self._calc_averages(durations)
         std_deviations = self._calc_deviations(durations, averages)
 
-        filename = f"{datetime.now().strftime('%Y-%m-%d-%H-%M')}_metadata_{self._identifier}.json"
-
-        with open(outdir / filename, "w") as f:
+        with open(outdir / "metadata.json", "w") as f:
             json.dump(
                 {
                     "metadata": self._metadata,
