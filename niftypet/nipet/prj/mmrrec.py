@@ -200,9 +200,7 @@ def osemone(datain, mumaps, hst, scanner_params, recmod=3, itr=4, fwhm=0., psf=N
     muh, muo = mumaps
 
     # get the GPU version of the image dims
-    timer.start_block("convert2dev")
     mus = mmrimg.convert2dev(muo + muh, Cnt)
-    timer.end_block("convert2dev")
 
     # remove gaps from the prompt sino
     psng = mmraux.remgaps(hst['psino'], txLUT, Cnt)
