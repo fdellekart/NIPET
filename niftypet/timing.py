@@ -1,8 +1,7 @@
-import time
 import json
 from pathlib import Path
 from typing import List, Dict, TypeVar
-from datetime import timedelta
+from datetime import timedelta, datetime
 from copy import deepcopy
 from math import sqrt
 from collections import defaultdict
@@ -35,25 +34,25 @@ class ReconMetadata:
 
     def start(self) -> None:
         """Set overall start to current time"""
-        self.start_time = time.time()
+        self.start_time = datetime.now()
 
     def end(self) -> None:
         """Set overall end to current time"""
-        self.end_time = time.time()
+        self.end_time = datetime.now()
 
     def start_block(self, block_name: str) -> None:
         """Set start time of a task within the reconstruction"""
-        self._current_times[block_name]["start"] = time.time()
+        self._current_times[block_name]["start"] = datetime.now().isoformat()
 
     def end_block(self, block_name: str) -> None:
         """Set end time of a task within the reconstruction"""
         if block_name not in self._current_times:
             raise RuntimeError(f"Block '{block_name}' was not started!")
-        self._current_times[block_name]["end"] = time.time()
+        self._current_times[block_name]["end"] = datetime.now().isoformat()
 
     @property
     def total_duration(self) -> timedelta:
-        return timedelta(seconds=self.end_time - self.start_time)
+        return self.end_time - self.start_time
 
     def _calc_durations(self) -> List[Dict[str, float]]:
         return [
@@ -99,13 +98,7 @@ class ReconMetadata:
 
     def end_frame(self) -> None:
         self.end_block("frame")
-
         self._previous_times.append(deepcopy(self._current_times))
-        print(
-            f"Finished frame nr {len(self._previous_times)}. "
-            f"Took {self._current_times['frame']['end'] - self._current_times['frame']['start']} seconds."
-        )
-
         self._current_times = defaultdict(dict)
 
     def add_metadatum(self, key: str, value: T) -> T:
