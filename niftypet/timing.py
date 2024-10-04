@@ -2,7 +2,7 @@ import time
 import json
 from pathlib import Path
 from typing import List, Dict, TypeVar
-from datetime import timedelta, datetime
+from datetime import timedelta
 from copy import deepcopy
 from math import sqrt
 from collections import defaultdict
@@ -84,17 +84,12 @@ class ReconMetadata:
         }
 
     def save(self, outdir: Path):
-        durations = self._calc_durations()
-        averages = self._calc_averages(durations)
-        std_deviations = self._calc_deviations(durations, averages)
-
         with open(outdir / "metadata.json", "w") as f:
             json.dump(
                 {
                     "metadata": self._metadata,
-                    "averages": averages,
-                    "std_deviations": std_deviations,
                     "total_seconds": self.total_duration.seconds,
+                    "timings": self._previous_times,
                 },
                 f,
             )
@@ -104,18 +99,6 @@ class ReconMetadata:
 
     def end_frame(self) -> None:
         self.end_block("frame")
-        frame_time = (
-            self._current_times["frame"]["end"] - self._current_times["frame"]["start"]
-        )
-        assigned_time = sum(
-            [
-                value["end"] - value["start"]
-                for key, value in self._current_times.items()
-                if key != "frame"
-            ]
-        )
-        self._current_times["unassigned"]["start"] = 0
-        self._current_times["unassigned"]["end"] = frame_time - assigned_time
 
         self._previous_times.append(deepcopy(self._current_times))
         print(
