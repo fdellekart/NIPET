@@ -282,7 +282,6 @@ def osemone(datain, mumaps, hst, scanner_params, recmod=3, itr=4, fwhm=0., psf=N
     # ========================================================================
 
     log.info('------ OSEM (%d) -------', itr)
-    timer.start_block("recon")
     # ------------------------------------
     Sn = 14   # number of subsets
 
@@ -355,10 +354,11 @@ def osemone(datain, mumaps, hst, scanner_params, recmod=3, itr=4, fwhm=0., psf=N
     with trange(itr, desc="OSEM", disable=log.getEffectiveLevel() > logging.INFO,
                 leave=log.getEffectiveLevel() <= logging.INFO) as pbar:
 
-        for k in pbar:
-
+        for idx, k in enumerate(pbar):
+            timer.start_block(f"recon_itr{idx}")
             petprj.osem(img, psng, rsng, ssng, nsng, asng, sinoTIdx, imgsens, msk, psfkernel,
                         txLUT, axLUT, Cnt)
+            timer.end_block(f"recon_itr{idx}")
 
             if np.nansum(img) < 0.1:
                 log.warning('it seems there is not enough true data to render reasonable image')
@@ -367,11 +367,11 @@ def osemone(datain, mumaps, hst, scanner_params, recmod=3, itr=4, fwhm=0., psf=N
                 break
             if recmod >= 3 and k < itr - 1 and itr > 1:
                 sct_time = time.time()
-                timer.start_block("scatter")
+                timer.start_block(f"scatter_itr{idx}")
                 sct = vsm(datain, mumaps, mmrimg.convert2e7(img, Cnt), scanner_params, histo=hst,
                           rsino=rsino, emmsk=emmskS, return_ssrb=return_ssrb,
                           return_mask=return_mask)
-                timer.end_block("scatter")
+                timer.end_block(f"scatter_itr{idx}")
                 if isinstance(sct, dict):
                     ssn = sct['sino']
                 else:
@@ -393,7 +393,6 @@ def osemone(datain, mumaps, hst, scanner_params, recmod=3, itr=4, fwhm=0., psf=N
 
                 nimpa.array2nii(im[::-1, ::-1, :], B, fpet)
 
-    timer.end_block("recon")
     log.info('recon time: %.3g', time.time() - stime)
     # ========================================================================
 
