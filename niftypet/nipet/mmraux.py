@@ -1145,7 +1145,7 @@ def putgaps(s, txLUT, Cnt, sino_no=0):
 
 def remgaps(sino, txLUT, Cnt, output=None):
     # number of sino planes (2D sinos) depends on the span used
-    nsinos = sino.shape[0]
+    nsinos = sino.shape[0] # sino is tuple for frames without activity
 
     # preallocate output sino without gaps
     if output is None:
